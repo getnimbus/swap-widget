@@ -101,7 +101,12 @@ export const Routes: React.FC<BoxProps> = (props) => {
                   gap: 6,
                 }}
               >
-                <Tooltip title="HELLO" placement="top" enterDelay={400} arrow>
+                <Tooltip
+                  title="Slippage refers to the difference between the expected price of a trade and the price at which the trade is executed."
+                  placement="top"
+                  enterDelay={400}
+                  arrow
+                >
                   <div
                     style={{
                       display: 'flex',
