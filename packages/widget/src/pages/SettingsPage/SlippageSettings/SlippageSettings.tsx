@@ -1,6 +1,5 @@
-import PercentIcon from '@mui/icons-material/Percent';
 import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
-import { Box, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import type { ChangeEventHandler, FocusEventHandler } from 'react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +11,6 @@ import {
   useSettingsStore,
 } from '../../../stores';
 import { formatSlippage, formatTokenPrice } from '../../../utils';
-import { BadgedValue, SettingCardExpandable } from '../SettingsCard';
 import {
   SettingsFieldSet,
   SlippageCustomInput,
@@ -48,14 +46,24 @@ export const SlippageSettings: React.FC = () => {
 
   const handleInputBlur: FocusEventHandler<HTMLInputElement> = (event) => {
     const { value } = event.target;
-    setInputValue(value);
-    setValue(
-      'slippage',
-      formatSlippage(value || defaultSlippage, defaultValue.current),
-    );
+    if (value) {
+      setInputValue(value);
+      setValue(
+        'slippage',
+        formatSlippage(value || defaultSlippage, defaultValue.current),
+      );
+    } else {
+      setInputValue('');
+      setFocused('button');
+      setValue(
+        'slippage',
+        formatSlippage(defaultSlippage, defaultValue.current),
+      );
+    }
   };
 
   const handleAutoSlippage = async () => {
+    setInputValue('');
     const fromAmountTokenPrice = formatTokenPrice(fromAmount, token?.priceUSD);
 
     const params = {
@@ -77,69 +85,7 @@ export const SlippageSettings: React.FC = () => {
     );
   };
 
-  const badgeColor = isSlippageOutsideRecommendedLimits
-    ? 'warning'
-    : isSlippageChanged
-      ? 'info'
-      : undefined;
-
   return (
-    // <SettingCardExpandable
-    //   value={
-    //     <BadgedValue
-    //       badgeColor={badgeColor}
-    //       showBadge={!!badgeColor}
-    //     >{`${slippage}%`}</BadgedValue>
-    //   }
-    //   icon={<PercentIcon />}
-    //   title={t(`settings.slippage`)}
-    // >
-    //   <Box mt={1.5}>
-    //     <SettingsFieldSet>
-    //       <SlippageDefaultButton
-    //         selected={defaultSlippage === slippage && focused !== 'input'}
-    //         onFocus={() => {
-    //           setFocused('button');
-    //         }}
-    //         onBlur={() => {
-    //           setFocused(undefined);
-    //         }}
-    //         onClick={() => { setValue('slippage', formatSlippage(defaultSlippage, defaultValue.current)) }}
-    //         disableRipple
-    //       >
-    //         {defaultSlippage}
-    //       </SlippageDefaultButton>
-    //       <SlippageCustomInput
-    //         selected={defaultSlippage !== slippage && focused !== 'button'}
-    //         placeholder={focused === 'input' ? '' : t('settings.custom')}
-    //         inputProps={{
-    //           inputMode: 'decimal',
-    //         }}
-    //         onChange={handleInputUpdate}
-    //         onFocus={() => {
-    //           setFocused('input');
-    //         }}
-    //         onBlur={handleInputBlur}
-    //         value={!slippage ||
-    //           slippage === defaultSlippage ||
-    //           slippage === '1' ||
-    //           slippage === '0.3'
-    //           ? ''
-    //           : slippage}
-    //         autoComplete="off"
-    //       />
-    //     </SettingsFieldSet>
-    //     {isSlippageOutsideRecommendedLimits && (
-    //       <SlippageLimitsWarningContainer>
-    //         <WarningRoundedIcon color="warning" />
-    //         <Typography fontSize={13} fontWeight={400}>
-    //           {t('warning.message.slippageOutsideRecommendedLimits')}
-    //         </Typography>
-    //       </SlippageLimitsWarningContainer>
-    //     )}
-    //   </Box>
-    // </SettingCardExpandable>
-
     <>
       <SettingsFieldSet>
         <div style={{ display: 'flex', gap: 6, flex: 1 }}>
@@ -149,6 +95,7 @@ export const SlippageSettings: React.FC = () => {
               setFocused('button');
             }}
             onClick={() => {
+              setInputValue('');
               setValue('slippage', formatSlippage('0.3', defaultValue.current));
             }}
             disableRipple
@@ -162,6 +109,7 @@ export const SlippageSettings: React.FC = () => {
               setFocused('button');
             }}
             onClick={() => {
+              setInputValue('');
               setValue(
                 'slippage',
                 formatSlippage(defaultSlippage, defaultValue.current),
@@ -178,6 +126,7 @@ export const SlippageSettings: React.FC = () => {
               setFocused('button');
             }}
             onClick={() => {
+              setInputValue('');
               setValue('slippage', formatSlippage('1', defaultValue.current));
             }}
             disableRipple
