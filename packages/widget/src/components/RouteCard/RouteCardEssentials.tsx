@@ -9,9 +9,11 @@ import { getFeeCostsBreakdown, getGasCostsBreakdown } from '../../utils';
 import { IconTypography } from './RouteCard.style';
 import type { FeesBreakdown, RouteCardEssentialsProps } from './types';
 import { useWidgetConfig } from '../../providers';
+import numeral from 'numeral';
 
 export const RouteCardEssentials: React.FC<RouteCardEssentialsProps> = ({
   route,
+  dataPnl,
 }) => {
   const { t, i18n } = useTranslation();
   const executionTimeMinutes = Math.ceil(
@@ -24,6 +26,14 @@ export const RouteCardEssentials: React.FC<RouteCardEssentialsProps> = ({
   const feeCosts = getFeeCostsBreakdown(route, false);
   const fees =
     gasCostUSD + feeCosts.reduce((sum, feeCost) => sum + feeCost.amountUSD, 0);
+
+  const pnl = dataPnl !== 0 ? Number(dataPnl?.newRealizedPnL) : 0;
+  const pnlPercent =
+    dataPnl !== 0
+      ? Number(dataPnl?.cost) !== 0
+        ? Number(dataPnl?.newRealizedPnL) / Number(dataPnl?.cost)
+        : 0
+      : 0;
 
   return (
     <>
@@ -98,7 +108,10 @@ export const RouteCardEssentials: React.FC<RouteCardEssentialsProps> = ({
             fontWeight="500"
             lineHeight={1}
           >
-            PnL $231 (10%)
+            PnL{' '}
+            {dataPnl !== 0
+              ? `$${numeral(pnl).format('0,0.00')} (${numeral(pnlPercent).format('0,0.00')}%)`
+              : '$0'}
           </Typography>
         </Box>
         <Box display="flex" alignItems="center">

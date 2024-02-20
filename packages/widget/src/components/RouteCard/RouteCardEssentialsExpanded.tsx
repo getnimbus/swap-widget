@@ -10,10 +10,11 @@ import { getFeeCostsBreakdown, getGasCostsBreakdown } from '../../utils';
 import { IconTypography } from './RouteCard.style';
 import type { FeesBreakdown, RouteCardEssentialsProps } from './types';
 import { useWidgetConfig } from '../../providers';
+import numeral from 'numeral';
 
 export const RouteCardEssentialsExpanded: React.FC<
   RouteCardEssentialsProps
-> = ({ route }) => {
+> = ({ route, dataPnl }) => {
   const { t, i18n } = useTranslation();
   const executionTimeMinutes = Math.ceil(
     route.steps
@@ -25,6 +26,15 @@ export const RouteCardEssentialsExpanded: React.FC<
   const feeCosts = getFeeCostsBreakdown(route, false);
   const fees =
     gasCostUSD + feeCosts.reduce((sum, feeCost) => sum + feeCost.amountUSD, 0);
+
+  const pnl = dataPnl !== 0 ? Number(dataPnl?.newRealizedPnL) : 0;
+  const pnlPercent =
+    dataPnl !== 0
+      ? Number(dataPnl?.cost) !== 0
+        ? Number(dataPnl?.newRealizedPnL) / Number(dataPnl?.cost)
+        : 0
+      : 0;
+
   return (
     <Box flex={1} mt={2}>
       <Box>
@@ -105,7 +115,7 @@ export const RouteCardEssentialsExpanded: React.FC<
             fontWeight="600"
             lineHeight={1.125}
           >
-            $231
+            {dataPnl !== 0 ? `$${numeral(pnl).format('0,0.00')}` : '$0'}
           </Typography>
         </Box>
         <Box mt={0.5} ml={7}>
@@ -123,7 +133,9 @@ export const RouteCardEssentialsExpanded: React.FC<
             fontWeight="500"
             lineHeight={1.125}
           >
-            $231 gain 10%
+            {dataPnl !== 0
+              ? `$${numeral(pnl).format('0,0.00')} ${pnlPercent >= 0 ? 'gain' : 'loss'} (${numeral(Math.abs(pnlPercent)).format('0,0.00')}%)`
+              : '$0'}
           </Typography>
         </Box>
       </Box>

@@ -9,6 +9,7 @@ export interface RouteCardProps {
 
 export interface RouteCardEssentialsProps {
   route: Route;
+  dataPnl: any;
 }
 
 export interface RouteCardSkeletonProps {

@@ -5,7 +5,7 @@ import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import type { TooltipProps } from '@mui/material';
 import { Box, Collapse, Tooltip, Typography } from '@mui/material';
 import type { MouseEventHandler } from 'react';
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useWidgetConfig } from '../../providers';
 import { formatTokenAmount } from '../../utils';
@@ -24,9 +24,10 @@ import { TokenContainer } from './RouteCard.style';
 import { RouteCardEssentials } from './RouteCardEssentials';
 import { RouteCardEssentialsExpanded } from './RouteCardEssentialsExpanded';
 import type { RouteCardProps } from './types';
-import { useTokenAddressBalance } from '../../hooks';
+import { useAccount, useToken, useTokenAddressBalance } from '../../hooks';
 import { FormKeyHelper, useFieldValues } from '../../stores';
 import numeral from 'numeral';
+import axios from 'axios';
 
 const calculateTokenToAmount = (fromUSD: any, toUSD: any) => {
   const fromValue = 1 * Number(fromUSD);
@@ -67,6 +68,54 @@ export const RouteCard: React.FC<
   );
 
   const dataTokenFrom = useTokenAddressBalance(chainId, tokenAddress);
+  const [fromAmount] = useFieldValues('fromAmount');
+  const [toChain, toToken] = useFieldValues('toChain', 'toToken');
+  const tokenTo = useToken(toChain, toToken);
+  const { account } = useAccount();
+  const [dataPnl, setDataPnl] = useState(0);
+
+  useEffect(() => {
+    handlePnlCalculate();
+  }, []);
+
+  const handlePnlCalculate = async () => {
+    try {
+      const payload = {
+        owner: account?.address,
+        from: {
+          address: dataTokenFrom.token?.address,
+          symbol: dataTokenFrom.token?.symbol,
+          quantity: Number(fromAmount),
+          price: Number(dataTokenFrom.token?.priceUSD),
+        },
+        to: {
+          address: tokenTo.token?.address,
+          symbol: tokenTo.token?.symbol,
+          quantity: Number(
+            formatTokenAmount(
+              BigInt(route.toAmountMin),
+              route.toToken.decimals,
+            ),
+          ),
+          price: Number(tokenTo.token?.priceUSD),
+        },
+      };
+
+      const res = await axios.post(
+        `https://api-staging.getnimbus.io/swap/pnl?chain=${dataTokenFrom.chain?.coin}`,
+        payload,
+      );
+
+      if (res?.data?.data && res?.data?.data !== 0) {
+        setDataPnl(res?.data?.data);
+      } else {
+        setDataPnl(0);
+      }
+    } catch (e) {
+      setDataPnl(0);
+      console.error(e);
+    }
+  };
 
   const cardContent = (
     <Box flex={1}>
@@ -156,11 +205,11 @@ export const RouteCard: React.FC<
           {route.steps.map((step) => (
             <StepActions key={step.id} step={step} mt={2} />
           ))}
-          <RouteCardEssentialsExpanded route={route} />
+          <RouteCardEssentialsExpanded route={route} dataPnl={dataPnl} />
         </Collapse>
 
         <Collapse timeout={225} in={!cardExpanded} mountOnEnter unmountOnExit>
-          <RouteCardEssentials route={route} />
+          <RouteCardEssentials route={route} dataPnl={dataPnl} />
         </Collapse>
       </div>
     </Box>
